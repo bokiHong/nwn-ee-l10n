@@ -59,6 +59,34 @@ def _skip(name, why=""):
     print("  ⚠ %-46s %s" % (name, why))
 
 
+# 公开数据包（nwn-ee-l10n-data）导入过了吗？None = 还没探测
+_HAS_DATA = None
+
+
+def _probe_data(db):
+    """探测库里有没有公开数据。返回 (tm 条数, term 条数)。"""
+    global _HAS_DATA
+    try:
+        n_tm = db.execute("SELECT COUNT(*) FROM tm").fetchone()[0]
+        n_term = db.execute("SELECT COUNT(*) FROM term").fetchone()[0]
+    except Exception:
+        n_tm = n_term = 0
+    _HAS_DATA = (n_tm >= 1000 and n_term >= 100)
+    return n_tm, n_term
+
+
+def _check_data(name, ok, detail=""):
+    """依赖公开数据包的检查：没导入数据时**跳过**、不判失败 ✓。
+
+    这样「只克隆了代码仓库」的人跑 selftest 也不会看到一片红 ——
+    缺的是数据，不是代码坏了。
+    """
+    if _HAS_DATA is False:
+        _skip(name, "未导入公开数据包（跑 tools/bootstrap.py）")
+        return
+    return _check(name, ok, detail)
+
+
 # ============================================================ Sprint 1
 def check_sprint1(db):
     print("\n[1] key 语义（l10n\\keys.py）")
@@ -73,7 +101,9 @@ def check_sprint1(db):
 
     total = n_orphan = n_normsrc = n_raw = n_norm = n_unexplained = 0
     unnorm_raw = unnorm_norm = lead = trail = 0
-    for k, s in db.execute("SELECT key, src FROM tm"):
+    # 空库（还没导入公开数据）时库里没有 tm 表 —— 别在这里崩掉 ✓
+    _tm_rows = db.execute("SELECT key, src FROM tm").fetchall() if _HAS_DATA else []
+    for k, s in _tm_rows:
         total += 1
         if not s:
             n_orphan += 1
@@ -127,18 +157,19 @@ def check_sprint1(db):
     # ⚠ 不写死等值：tm 会随"补建未入库条目 / 手工新增"增长（2026-10-10 实测 43945 = +3 条）
     #   只卡**下界** —— 防止"索引层结构被破坏导致译文行数暴跌"，而不是防增长 ✗
     # 公开数据包过滤了 64 条「空 src 或空 dst」的脏行（43,951 → 43,887），故下界取 43,000 ✓
-    _check("count >= 43000", c >= 43000, "实测 %d" % c)
+    _check_data("count >= 43000", c >= 43000, "实测 %d" % c)
     st = tm.stats()
     # ⚠ 不写死数字：manual 会随"术语统一 / 手工保存"增长（2026-10-08 起多次变更）
     # ⚠ 2026-10-08 大批术语统一把很多 auto 行标成了 manual（实测 35308/8634），
     #   所以这里只能卡"两边都还有相当量"，auto 的下限不能卡太高
-    _check("stats 有 auto/manual", st.get("auto", 0) > 20000 and st.get("manual", 0) > 2000,
+    _check_data("stats 有 auto/manual", st.get("auto", 0) > 20000 and st.get("manual", 0) > 2000,
            str(st))
     hit = tm.search("Swordflight", limit=5)
-    _check("search 有结果", len(hit) > 0, "%d 条（限 5）" % len(hit))
+    _check_data("search 有结果", len(hit) > 0, "%d 条（限 5）" % len(hit))
     m = tm.zh_to_en_map()
-    _check("zh_to_en_map 覆盖全库", len(m) > 40000, "%d 条" % len(m))
-    _check("get 按 key 取译文", tm.get(hit[0][0]) == hit[0][2])
+    _check_data("zh_to_en_map 覆盖全库", len(m) > 40000, "%d 条" % len(m))
+    _got = (tm.get(hit[0][0]) == hit[0][2]) if hit else False
+    _check_data("get 按 key 取译文", _got)
 
     print("\n[4] TermRepo（术语）+ 旧 JSON 资产适配")
     raw = json.load(open(GLOSSARY_JSON, encoding="utf-8"))
@@ -169,7 +200,7 @@ def check_sprint1(db):
            % (len(draft), all(d.status == "candidate" for d in draft)))
     var = TermRepo.load_legacy_variants(VARIANTS_JSON)
     _check("term_variants 读出全部规则", len(var) == 77, "实测 %d 条" % len(var))
-    _check("term 表已收编（active ≥ 213 + candidate ≥ 6000）",
+    _check_data("term 表已收编（active ≥ 213 + candidate ≥ 6000）",
            terms.count("active") >= 213 and terms.count("candidate") >= 6000,
            "实测 %s" % terms.count_by_status())
 
@@ -196,11 +227,17 @@ def check_sprint2(db):
         print("      想跑就设 L10N_TEST_MOD=<你的 .mod 路径>，当前找的是：")
         print("      %s" % CH1)
         return
-    cons = [c for c in crepo.list(PROJECT) if os.path.basename(c["path"]).startswith("Swordflight - Chapter One")]
+    # 全新库里还没有这个容器 —— 顺手 scan 落库（Sprint 2 本来就在测 scan ✓）
+    from .services.scan_service import require_container
+    try:
+        cid, _fmt = require_container(db, PROJECT, CH1, scan_if_missing=True)
+    except Exception as e:                      # noqa: BLE001
+        _skip("Sprint 2 scan", "scan 失败：%s" % str(e)[:60])
+        return
+    cons = [c for c in crepo.list(PROJECT) if c["id"] == cid]
     _check("Ch1 容器已登记", len(cons) == 1, "%d 个" % len(cons))
     if not cons:
         return
-    cid = cons[0]["id"]
     _check("容器字节 = 11,182,300", cons[0]["size"] == 11182300, str(cons[0]["size"]))
     n_res = rrepo.count(cid)
     _check("资源 1934 个", n_res == 1934, "实测 %d" % n_res)
@@ -259,9 +296,11 @@ def check_sprint2(db):
             print("        真正缺失（两种 key 都查不到）：%r" % (s or "")[:64])
     row = db.execute("SELECT units, reused FROM mods WHERE name=?",
                      ("Swordflight - Chapter One",)).fetchone()
-    _check("与 mods 表交叉验证（units=5731）", bool(row) and row[0] == 5731,
-           str(tuple(row) if row else None))
-    if row:
+    if row is None:
+        _skip("与 mods 表交叉验证",
+              "mods 表里没有 Ch1 记录（历史统计快照，公开数据包不带）")
+    else:
+        _check("与 mods 表交叉验证（units=5731）", row[0] == 5731, str(tuple(row)))
         print("      mods 表记录 units=%s reused=%s —— 原始 pipeline 用 raw key，"
               "所以当时 3325 条全部命中" % (row[0], row[1]))
 
@@ -400,15 +439,15 @@ def check_sprint4(db):
     # ⚠ active / 必守 / 替换规则**只增不减** → 下界断言 ✓
     # ⚠ candidate **会双向变化**（新增草案会涨；被采纳为 active 时会按设计清掉 ✓
     #   2026-10-10 实测 6840 → 6832，因为 8 条草案被提升为 active）→ 也只能卡下界 ✗ 别写死
-    _check("active ≥ 213 条", st.get("active", 0) >= 213, str(st))
-    _check("candidate ≥ 6000 条", st.get("candidate", 0) >= 6000, str(st))
-    _check("必守 ≥ 149 条", tr.count_required() >= 149, "实测 %d" % tr.count_required())
-    _check("替换规则 ≥ 77 条", len(tr.variants()) >= 77, "实测 %d" % len(tr.variants()))
+    _check_data("active ≥ 213 条", st.get("active", 0) >= 213, str(st))
+    _check_data("candidate ≥ 6000 条", st.get("candidate", 0) >= 6000, str(st))
+    _check_data("必守 ≥ 149 条", tr.count_required() >= 149, "实测 %d" % tr.count_required())
+    _check_data("替换规则 ≥ 77 条", len(tr.variants()) >= 77, "实测 %d" % len(tr.variants()))
     from collections import Counter
     types = Counter(t.type for t in tr.list())
     # ⚠ 只校验"来自 glossary.json 的那三类**不少于**原值"：新增术语（Epic/Daisho/职业…）
     #   会往 class/misc 里加，按等号断言就会假失败。
-    _check("分类分布（name/place/deity 不少于原值）",
+    _check_data("分类分布（name/place/deity 不少于原值）",
            types.get("name", 0) >= 158 and types.get("place", 0) >= 27
            and types.get("deity", 0) >= 20, str(dict(types)))
 
@@ -436,17 +475,17 @@ def check_sprint4(db):
 
     print("\n[18] Sprint 4：模糊匹配")
     hits = tr.fuzzy("sword", limit=10)
-    _check("sword 能匹配到 Swordsage", any(t.en == "Swordsage" for t, _s, _w in hits),
+    _check_data("sword 能匹配到 Swordsage", any(t.en == "Swordsage" for t, _s, _w in hits),
            "命中 %d 条" % len(hits))
     h2 = tr.fuzzy("Swordsage")
-    _check("精确匹配排第一且 score=1.0",
+    _check_data("精确匹配排第一且 score=1.0",
            bool(h2) and h2[0][0].en == "Swordsage" and h2[0][1] == 1.0,
            str(h2[0][1]) if h2 else "无结果")
-    _check("中文子串匹配（剑）",
+    _check_data("中文子串匹配（剑）",
            any((t.zh or "") and "剑" in t.zh for t, _s, _w in tr.fuzzy("剑", limit=10)))
-    _check("归一化匹配（去撇号/空格）",
+    _check_data("归一化匹配（去撇号/空格）",
            len(tr.fuzzy("mordenkainensmagnificent", limit=5)) > 0)
-    _check("无匹配返回空", tr.fuzzy("zzzzqqqqxxxx") == [])
+    _check_data("无匹配返回空", tr.fuzzy("zzzzqqqqxxxx") == [])
 
     print("\n[19] Sprint 4：强制守必校验")
     # ⚠ 用 `Swordsage` + `Shadow` 这两个**确实在术语表里**的词（旧测试用了 `Shadow Blade`，
@@ -454,14 +493,14 @@ def check_sprint4(db):
     # ⚠ 2026-10-11：`Shadow` 的规范译名已由「幽影」改为「**阴影**」（串名裁决批），
     #   测试里的期望值必须跟着改，否则回归会红 ✗
     good = tr.check_required("The Swordsage uses Shadow.", "贤者之剑使用阴影。")
-    _check("用了规范译名 → 通过", good == [], str(good))
+    _check_data("用了规范译名 → 通过", good == [], str(good))
     bad = tr.check_required("The Swordsage uses Shadow.", "剑圣使用阴影。")
-    _check("用了错误译名 → 报违规", bad == [("Swordsage", "贤者之剑")], str(bad))
-    _check("原文无术语 → 不报",
+    _check_data("用了错误译名 → 报违规", bad == [("Swordsage", "贤者之剑")], str(bad))
+    _check_data("原文无术语 → 不报",
            tr.check_required("A plain rock.", "一块普通的石头。") == [])
     hp = {e for e, _z, _r in tr.hits("The Swordsage flies to Swordflight.")}
-    _check("hits 列出命中术语", {"Swordsage", "Swordflight"} <= hp, str(hp))
-    _check("prompt_block 生成译前注入", "Swordsage" in tr.prompt_block("The Swordsage"))
+    _check_data("hits 列出命中术语", {"Swordsage", "Swordflight"} <= hp, str(hp))
+    _check_data("prompt_block 生成译前注入", "Swordsage" in tr.prompt_block("The Swordsage"))
     if os.path.exists(out):
         os.remove(out)
 
@@ -632,7 +671,21 @@ def main():
                         "6": "Sprint 6（tlk tool 接中央库）",
                         "7": "Sprint 7（mod tool + 术语库编辑器）"}.get(
                             which, "Sprint 1 + 2 + 3 + 4 + 5 + 6 + 7"))
-    db = connect(DEF_DB, migrate_now=False)
+    if not os.path.exists(DEF_DB):
+        # 全新环境：先把空库建出来（`tm` / `mods` 两张表的真源在 modl10n），
+        # 这样「不依赖数据」的检查照样能跑，而不是抛 `no such table: tm` ✓
+        from modl10n.tm import TM
+        TM(DEF_DB).db.close()
+    db = connect(DEF_DB, migrate_now=True)
+    _n_tm, _n_term = _probe_data(db)
+    if not _HAS_DATA:
+        print()
+        print("!" * 78)
+        print("⚠ 中央库还没有公开数据（tm %d 条 / term %d 条）" % (_n_tm, _n_term))
+        print("  依赖数据的检查会被跳过 —— 缺的是数据，不是代码坏了。")
+        print("  先导入数据包：")
+        print("      python tools/bootstrap.py --data ../nwn-ee-l10n-data/data")
+        print("!" * 78)
     try:
         if which in ("all", "1"):
             check_sprint1(db)

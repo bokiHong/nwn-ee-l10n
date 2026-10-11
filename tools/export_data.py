@@ -51,13 +51,18 @@ def export_tm(db, out, fname="tm.jsonl"):
     ★ **必须带上原始 `key`**：库里有两种 key 算法写进来的行（norm / raw，见
     `l10n/keys.py` 的说明），导入时只能原样还原、不能重算 —— 重算会把 raw 那批
     的行算成另一个 key，同一句英文出现两条 ✗。
+
+    ★ **孤儿译文（`src` 为空但 `key` + `dst` 有效）也要导出**：实测源库里有 64 条
+    这种行，它们正是「模组里的文本能按 key 查到译文、但按 src 查不到」的原因。
+    漏掉它们会让导入方看到「明明译过却报未译」的假缺口 ✗。
     """
     p = os.path.join(out, fname)
     n = 0
     with open(p, "w", encoding="utf-8", newline="\n") as f:
         for key, src, dst, mod, status, note in db.execute(
                 "SELECT key, src, dst, src_mod, status, note FROM tm "
-                "WHERE src IS NOT NULL AND src != '' AND dst IS NOT NULL AND dst != '' "
+                "WHERE (src IS NOT NULL AND src != '') "
+                "   OR (dst IS NOT NULL AND dst != '') "
                 "ORDER BY key"):
             rec = {"key": key, "src": src, "dst": dst, "mod": mod or "",
                    "status": status or "auto"}
