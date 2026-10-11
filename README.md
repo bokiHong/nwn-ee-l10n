@@ -94,7 +94,7 @@ python -m l10n.selftest
 
 | 不含 | 为什么 |
 | --- | --- |
-| ❌ 模组本体（`.mod` / `.erf` / `.hak`） | PRC8、Swordflight 等版权归各自作者；**Swordflight 是付费模组** |
+| ❌ 模组本体（`.mod` / `.erf` / `.hak`） | 版权归各自作者。PRC8、Swordflight 这类社区模组**本来就是免费下载的**，但「免费」≠「可以再分发」—— 请自行从原发布页下载 |
 | ❌ 游戏原始文件（`dialog.tlk`、`.bif`、`.key`） | 版权归 Beamdog / 原版权方 |
 | ❌ D&D 规则书语料 | 第三方版权内容，只用于本地术语校对 |
 | ❌ 第三方汉化包本体 | 如 `NWN_EE_zh_CN_Unicode`（`version.dll` 钩子）是别人做的 |
