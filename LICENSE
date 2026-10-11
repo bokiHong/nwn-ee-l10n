@@ -1,0 +1,35 @@
+MIT License
+
+Copyright (c) 2026 bokiHong
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------
+
+注意（NOTICE）：
+
+1. 本许可证只覆盖本仓库中的**代码**（Python 脚本、GUI 工具、命令行工具）。
+   数据文件的许可见 `LICENSE-DATA`。
+
+2. 本仓库**不包含**任何第三方游戏或模组的原始文件。使用者需要自行准备
+   合法的《Neverwinter Nights: Enhanced Edition》游戏副本，以及所汉化模组的
+   正版文件。详见 README 的「本仓库不含什么」。
+
+3. 若你是权利人，认为本仓库中的任何内容侵犯了你的权益，请通过仓库 Issue
+   联系我们，我们会立即处理。

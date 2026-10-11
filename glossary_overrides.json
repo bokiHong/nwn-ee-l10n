@@ -1,0 +1,35 @@
+{
+  "zh": {
+    "Swordflight": "剑飞",
+    "Swordsage": "贤者之剑",
+    "Mordenkainen's Magnificent Mansion": "魔邓肯豪宅术",
+    "Holy Avenger": "神圣复仇者",
+    "Epic Morninglord of Lathander": "兰森德尔的晨光领主"
+  },
+  "required": {
+    "Swordflight": true,
+    "Swordsage": true,
+    "Mordenkainen's Magnificent Mansion": false,
+    "Holy Avenger": false,
+    "Epic Morninglord of Lathander": true
+  },
+  "note": "由 modl10n.rename / 术语库编辑器写入：译名·等级·分类·新增术语的覆盖层",
+  "type": {
+    "Swordsage": "class",
+    "Epic Morninglord of Lathander": "class"
+  },
+  "add": {
+    "Swordsage": {
+      "zh": "贤者之剑",
+      "type": "class",
+      "required": true,
+      "note": "术语库编辑器新增（曾被 rename.py 丢过，已恢复）"
+    },
+    "Epic Morninglord of Lathander": {
+      "zh": "兰森德尔的晨光领主",
+      "type": "class",
+      "required": true,
+      "note": "术语库编辑器新增"
+    }
+  }
+}

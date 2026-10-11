@@ -1,0 +1,1510 @@
+{
+  "version": 1,
+  "terms": [
+    {
+      "en": "Adaras",
+      "zh": "阿达拉斯",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Alana",
+      "zh": "阿兰娜",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Ashaler",
+      "zh": "阿沙勒",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Belpharan",
+      "zh": "贝尔法兰",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Binga",
+      "zh": "宾加",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Bofmer",
+      "zh": "博夫默",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Bunglo",
+      "zh": "邦格洛",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Cobble",
+      "zh": "科布尔",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Danarash",
+      "zh": "达纳拉什",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Efzan",
+      "zh": "埃夫赞",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Faseph",
+      "zh": "法塞夫",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Fenar",
+      "zh": "费纳尔",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Fenhald",
+      "zh": "芬哈德",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Gaduish",
+      "zh": "加杜伊什",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Galhadr",
+      "zh": "加尔哈德尔",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Garad",
+      "zh": "加拉德",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Gidishnak",
+      "zh": "吉迪什纳克",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Glebur",
+      "zh": "格莱伯",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Hakamdi",
+      "zh": "哈卡姆迪",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Haldin",
+      "zh": "哈尔丁",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Hamad",
+      "zh": "哈马德",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Hargob",
+      "zh": "哈戈布",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Harry",
+      "zh": "哈里",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Hedge",
+      "zh": "赫奇",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Kadath",
+      "zh": "卡达斯",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Kaldras",
+      "zh": "卡尔德拉斯",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Khadash",
+      "zh": "卡达什",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Malathar",
+      "zh": "马拉萨尔",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Menar",
+      "zh": "梅纳尔",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Olazhur",
+      "zh": "奥拉祖尔",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Pardaz",
+      "zh": "帕尔达兹",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Peroibo",
+      "zh": "佩罗伊博",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Quirixea",
+      "zh": "奎里希亚",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Radazal",
+      "zh": "拉达扎尔",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Rajar",
+      "zh": "拉贾尔",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Raragoth",
+      "zh": "拉拉戈斯",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Ramurg",
+      "zh": "拉穆尔格",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Roigo",
+      "zh": "罗伊戈",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Sakos",
+      "zh": "萨科斯",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Salud",
+      "zh": "萨鲁德",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Saman",
+      "zh": "萨曼",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Shalenur",
+      "zh": "沙勒努尔",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Sherad",
+      "zh": "谢拉德",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Sherkal",
+      "zh": "舍卡尔",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Talas",
+      "zh": "塔拉斯",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Taravan",
+      "zh": "塔拉万",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Tarshal",
+      "zh": "塔沙尔",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Tashalir",
+      "zh": "塔沙利尔",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Tazen",
+      "zh": "塔赞",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Waladi",
+      "zh": "瓦拉迪",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Wagu",
+      "zh": "瓦古",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Zarala",
+      "zh": "扎拉拉",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Zeden",
+      "zh": "泽登",
+      "type": "name",
+      "note": "人名",
+      "required": true
+    },
+    {
+      "en": "Calimport",
+      "zh": "卡林港",
+      "type": "place",
+      "note": "地名",
+      "required": true
+    },
+    {
+      "en": "Calimshan",
+      "zh": "卡林杉",
+      "type": "place",
+      "note": "地名",
+      "required": true
+    },
+    {
+      "en": "Calim Desert",
+      "zh": "卡林沙漠",
+      "type": "place",
+      "note": "地名",
+      "required": true
+    },
+    {
+      "en": "Memnon",
+      "zh": "门农",
+      "type": "place",
+      "note": "地名",
+      "required": true
+    },
+    {
+      "en": "Shifting Sands",
+      "zh": "流沙旅店",
+      "type": "place",
+      "note": "地名",
+      "required": true
+    },
+    {
+      "en": "Faerûn",
+      "zh": "费伦",
+      "type": "place",
+      "note": "地名",
+      "required": true
+    },
+    {
+      "en": "Faerun",
+      "zh": "费伦",
+      "type": "place",
+      "note": "地名",
+      "required": true
+    },
+    {
+      "en": "Amn",
+      "zh": "安姆",
+      "type": "place",
+      "note": "地名",
+      "required": true
+    },
+    {
+      "en": "Cormyr",
+      "zh": "科米尔",
+      "type": "place",
+      "note": "地名",
+      "required": true
+    },
+    {
+      "en": "Aglarond",
+      "zh": "阿格拉隆德",
+      "type": "place",
+      "note": "地名",
+      "required": true
+    },
+    {
+      "en": "Moonshae Isles",
+      "zh": "月影群岛",
+      "type": "place",
+      "note": "地名（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Moonshae",
+      "zh": "月影群岛",
+      "type": "place",
+      "note": "地名（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Sembia",
+      "zh": "森比亚",
+      "type": "place",
+      "note": "地名（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Westgate",
+      "zh": "西门城",
+      "type": "place",
+      "note": "地名（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Waterdeep",
+      "zh": "深水城",
+      "type": "place",
+      "note": "地名（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "The Twisted Rune",
+      "zh": "扭曲符文",
+      "type": "place",
+      "note": "地名（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "The Ere'Wood",
+      "zh": "埃雷伍德",
+      "type": "place",
+      "note": "地名（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Frosted Pits",
+      "zh": "霜坑",
+      "type": "place",
+      "note": "地名（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Frozen Times",
+      "zh": "冰封时代",
+      "type": "place",
+      "note": "地名（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Limbo",
+      "zh": "混沌海",
+      "type": "place",
+      "note": "地名（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Tyr",
+      "zh": "提尔",
+      "type": "deity",
+      "note": "神祇",
+      "required": true
+    },
+    {
+      "en": "Lathander",
+      "zh": "兰森德尔",
+      "type": "deity",
+      "note": "神祇",
+      "required": true
+    },
+    {
+      "en": "Oghma",
+      "zh": "欧格玛",
+      "type": "deity",
+      "note": "神祇",
+      "required": true
+    },
+    {
+      "en": "Clangeddin",
+      "zh": "克兰盖丁",
+      "type": "deity",
+      "note": "神祇",
+      "required": true
+    },
+    {
+      "en": "Zataroth",
+      "zh": "扎塔罗斯",
+      "type": "deity",
+      "note": "神祇",
+      "required": true
+    },
+    {
+      "en": "Selûne",
+      "zh": "塞露涅",
+      "type": "deity",
+      "note": "神祇（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Selune",
+      "zh": "塞露涅",
+      "type": "deity",
+      "note": "神祇（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Tymora",
+      "zh": "泰摩拉",
+      "type": "deity",
+      "note": "神祇（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Cyric",
+      "zh": "希瑞克",
+      "type": "deity",
+      "note": "神祇（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Shar",
+      "zh": "莎尔",
+      "type": "deity",
+      "note": "神祇（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Ilmater",
+      "zh": "伊尔梅特",
+      "type": "deity",
+      "note": "神祇（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Torm",
+      "zh": "托姆",
+      "type": "deity",
+      "note": "神祇（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Mystra",
+      "zh": "密斯特拉",
+      "type": "deity",
+      "note": "神祇（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Kelemvor",
+      "zh": "凯兰沃",
+      "type": "deity",
+      "note": "神祇（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Bane",
+      "zh": "班恩",
+      "type": "deity",
+      "note": "神祇（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Sune",
+      "zh": "淑妮",
+      "type": "deity",
+      "note": "神祇（可依语境微调）",
+      "required": false
+    },
+    {
+      "en": "Asabi",
+      "zh": "阿萨比",
+      "type": "misc",
+      "note": "生物",
+      "required": true
+    },
+    {
+      "en": "Krenshar",
+      "zh": "克伦沙尔",
+      "type": "misc",
+      "note": "生物",
+      "required": true
+    },
+    {
+      "en": "Genasi",
+      "zh": "元素裔",
+      "type": "misc",
+      "note": "术语",
+      "required": false
+    },
+    {
+      "en": "Holy Avenger",
+      "zh": "神圣复仇者",
+      "type": "misc",
+      "note": "术语",
+      "required": false
+    },
+    {
+      "en": "Mordenkainen's Magnificent Mansion",
+      "zh": "魔邓肯豪宅术",
+      "type": "misc",
+      "note": "术语",
+      "required": false
+    },
+    {
+      "en": "Swordflight",
+      "zh": "剑飞",
+      "type": "misc",
+      "note": "术语",
+      "required": true
+    },
+    {
+      "en": "Zekar",
+      "zh": "泽卡尔",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Kalomas",
+      "zh": "卡洛玛斯",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Hasin",
+      "zh": "哈辛",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Nasirak",
+      "zh": "纳西拉克",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Kadzia",
+      "zh": "卡齐娅",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Gruzhaur",
+      "zh": "格鲁扎尔",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Senkhar",
+      "zh": "森卡尔",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Aladar",
+      "zh": "阿拉达尔",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Zagash",
+      "zh": "扎加什",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Azghulkar",
+      "zh": "阿兹古尔卡",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Inas",
+      "zh": "伊纳斯",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Jalar",
+      "zh": "贾拉尔",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Talu",
+      "zh": "塔鲁",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Korad",
+      "zh": "科拉德",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Thorik",
+      "zh": "索里克",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Snajagh",
+      "zh": "斯纳贾格",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Hrangarak",
+      "zh": "赫兰加拉克",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Sadarash",
+      "zh": "萨达拉什",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Gorav",
+      "zh": "戈拉夫",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Blimfin",
+      "zh": "布林芬",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Zaynem",
+      "zh": "扎伊内姆",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Kelem",
+      "zh": "凯勒姆",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Kelem Ishadin",
+      "zh": "凯勒姆·伊沙丁",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Barazh",
+      "zh": "巴拉兹",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Ulaz",
+      "zh": "乌拉斯",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Khachar",
+      "zh": "卡查尔",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Khaladar",
+      "zh": "卡拉达尔",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Jra'ein",
+      "zh": "杰拉因",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Ishadin",
+      "zh": "伊沙丁",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Chelys",
+      "zh": "凯莉丝",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Gunkruzelle",
+      "zh": "冈克鲁泽尔",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Saitef",
+      "zh": "赛特夫",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Teroz",
+      "zh": "泰罗兹",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Kam",
+      "zh": "卡姆",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Mazar",
+      "zh": "马扎尔",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Ferazha",
+      "zh": "费拉莎",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Dashar",
+      "zh": "达沙尔",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Makashi",
+      "zh": "马卡希",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Gemarak",
+      "zh": "格玛拉克",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Kalad",
+      "zh": "卡拉德",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Zemquin",
+      "zh": "泽姆昆",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Olim",
+      "zh": "奥利姆",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Shakam",
+      "zh": "沙卡姆",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Kolanu",
+      "zh": "科拉努",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Bamot",
+      "zh": "巴莫特",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Naseb",
+      "zh": "纳塞布",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Sekaya",
+      "zh": "塞卡娅",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Sarakan",
+      "zh": "萨拉坎",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Sarojal",
+      "zh": "萨罗贾尔",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Korz",
+      "zh": "科尔兹",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Harojan",
+      "zh": "哈罗扬",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Kasat",
+      "zh": "卡萨特",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Taras",
+      "zh": "塔拉斯",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Lamash",
+      "zh": "拉玛什",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Drasham",
+      "zh": "德拉沙姆",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Taran",
+      "zh": "塔兰",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Enar",
+      "zh": "埃纳尔",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Ynal",
+      "zh": "伊纳尔",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Umal",
+      "zh": "乌马尔",
+      "type": "name",
+      "note": "人名（Ch2 高频，必守）",
+      "required": true
+    },
+    {
+      "en": "Elcalden",
+      "zh": "埃尔卡登",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": true
+    },
+    {
+      "en": "Phanas",
+      "zh": "法纳斯",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Feyar",
+      "zh": "费亚尔",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": true
+    },
+    {
+      "en": "Neneb",
+      "zh": "内内布",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Namal",
+      "zh": "纳马尔",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Kephar",
+      "zh": "凯法尔",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Sebar",
+      "zh": "塞巴尔",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Orebas",
+      "zh": "奥雷巴斯",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Ganirb",
+      "zh": "加尼尔布",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Kemadash",
+      "zh": "凯马达什",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": true
+    },
+    {
+      "en": "Kashal",
+      "zh": "卡沙尔",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Zeepa",
+      "zh": "泽帕",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": true
+    },
+    {
+      "en": "Nesan",
+      "zh": "内桑",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Ramel",
+      "zh": "拉梅尔",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Kasan",
+      "zh": "卡桑",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Nadchar",
+      "zh": "纳德查尔",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": true
+    },
+    {
+      "en": "Mejalash",
+      "zh": "梅贾拉什",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Shandar",
+      "zh": "山达尔",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Naruaz",
+      "zh": "纳鲁阿兹",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Tesenal",
+      "zh": "泰塞纳尔",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": true
+    },
+    {
+      "en": "Mekazhan",
+      "zh": "梅卡赞",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Narum",
+      "zh": "纳鲁姆",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Harax",
+      "zh": "哈拉克斯",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Zeaxua",
+      "zh": "泽克苏娅",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": true
+    },
+    {
+      "en": "Ranulf",
+      "zh": "拉努尔夫",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": true
+    },
+    {
+      "en": "Smadi",
+      "zh": "斯马迪",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Kaseph",
+      "zh": "卡塞夫",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Serethan",
+      "zh": "瑟瑞森",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": true
+    },
+    {
+      "en": "Semu",
+      "zh": "塞穆",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Kiroth",
+      "zh": "基罗斯",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Toradak",
+      "zh": "托拉达克",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Eleriwen",
+      "zh": "埃勒里温",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Orkaz",
+      "zh": "奥卡兹",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": true
+    },
+    {
+      "en": "Neym",
+      "zh": "内姆",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Silar",
+      "zh": "希拉尔",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": true
+    },
+    {
+      "en": "T'Kor",
+      "zh": "特科尔",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Radavi",
+      "zh": "拉达维",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Egbar",
+      "zh": "埃格巴",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Fasglir",
+      "zh": "法斯格利尔",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Daref",
+      "zh": "达雷夫",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Elwab",
+      "zh": "埃尔瓦布",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Fezar",
+      "zh": "费扎尔",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Sylenda",
+      "zh": "赛伦达",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Korino",
+      "zh": "科里诺",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Delshera",
+      "zh": "德尔谢拉",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": false
+    },
+    {
+      "en": "Elydra",
+      "zh": "艾莉德拉",
+      "type": "name",
+      "note": "人名（Ch2 低频，建议）",
+      "required": true
+    },
+    {
+      "en": "Valkur",
+      "zh": "瓦尔库尔",
+      "type": "deity",
+      "note": "神祇/组织",
+      "required": true
+    },
+    {
+      "en": "Gruumsh",
+      "zh": "格乌什",
+      "type": "deity",
+      "note": "神祇/组织",
+      "required": true
+    },
+    {
+      "en": "Mulhorand",
+      "zh": "穆尔霍兰德",
+      "type": "deity",
+      "note": "神祇/组织",
+      "required": true
+    },
+    {
+      "en": "Harper",
+      "zh": "竖琴手",
+      "type": "deity",
+      "note": "神祇/组织",
+      "required": true
+    },
+    {
+      "en": "Twisted Rune",
+      "zh": "扭曲符文会",
+      "type": "place",
+      "note": "地名/组织",
+      "required": true
+    },
+    {
+      "en": "Temple District",
+      "zh": "神殿区",
+      "type": "place",
+      "note": "地名（建议）",
+      "required": false
+    },
+    {
+      "en": "Merchant District",
+      "zh": "商人区",
+      "type": "place",
+      "note": "地名（建议）",
+      "required": false
+    },
+    {
+      "en": "Scholar's Corner",
+      "zh": "学者之角",
+      "type": "place",
+      "note": "地名（建议）",
+      "required": false
+    },
+    {
+      "en": "Galhadr Estate",
+      "zh": "加尔哈德尔宅邸",
+      "type": "place",
+      "note": "地名（建议）",
+      "required": false
+    },
+    {
+      "en": "Zekar Estate",
+      "zh": "泽卡尔宅邸",
+      "type": "place",
+      "note": "地名（建议）",
+      "required": false
+    },
+    {
+      "en": "Sword of Valkur",
+      "zh": "瓦尔库尔之剑",
+      "type": "place",
+      "note": "地名（建议）",
+      "required": false
+    },
+    {
+      "en": "Swordsage",
+      "zh": "贤者之剑",
+      "type": "class",
+      "note": "术语库编辑器新增（曾被 rename.py 丢过，已恢复）",
+      "required": true
+    },
+    {
+      "en": "Epic Morninglord of Lathander",
+      "zh": "兰森德尔的晨光领主",
+      "type": "class",
+      "note": "术语统一：传奇晨曦之主 -> 兰森德尔的晨光领主",
+      "required": true
+    },
+    {
+      "en": "Soulcaster",
+      "zh": "魂术师",
+      "type": "class",
+      "note": "术语统一：缚魂者 -> 魂术师",
+      "required": true
+    },
+    {
+      "en": "Anima Mage",
+      "zh": "灵魂法师",
+      "type": "class",
+      "note": "术语统一：灵魂法师 -> 魂术师",
+      "required": true
+    }
+  ]
+}
