@@ -307,6 +307,60 @@ def cmd_status(args, db):
     return 0
 
 
+def cmd_pack(args, db):
+    """**重新打包**：把记忆库里的译文写回 `.mod`（复用 `pack_service.repack`，**0 次 API** ✓）。
+
+    与 `mod tool.py` 的「重新打包」按钮同源 ✓（原子写 + 覆盖前自动备份 + 读回校验）。
+    """
+    from .services import pack_service
+    print("=" * 74)
+    print("pack：%s" % args.mod)
+    r = pack_service.repack(args.mod, outdir=args.outdir, out=args.out,
+                            inplace=args.inplace, db=db)
+    print("  ✅ 产物：%s" % r.get("out"))
+    print("     读回校验：%s（比对 %s 条）" % (r.get("verified"), r.get("compared")))
+    runs = RunRepo(db)
+    rid = runs.start(args.project or "default", "pack", {"mod": args.mod})
+    runs.finish(rid, units=r.get("compared"), new_tr=0)
+    return 0
+
+
+def cmd_translate(args, db):
+    """翻译 —— **默认只估价**（不调 API ✓）；加 `--run --txt <txt> --key <key> --yes` 才真跑（会花钱 ✗）。
+
+    引擎复用 `tlk tool.py`（`translate_service` 用独立子进程调它 ✓ 不重写引擎）。
+    """
+    from .services import translate_service
+    print("=" * 74)
+    if not args.run:
+        print("translate（估价，不调 API）：%s" % (args.project or args.container_id or "-"))
+        p = translate_service.estimate(db, project=args.project,
+                                       container_id=args.container_id,
+                                       price_in=args.price_in, price_out=args.price_out,
+                                       sample=args.sample)
+        print("  " + p["summary"])
+        print(summarize_diff(p["diff"]))
+        print("  （估价完成：**没有调用任何 API** ✓）")
+        print("  要真跑：l10n translate --run --txt <导出txt> --key sk-xxx --tm <记忆库> --yes")
+        return 0
+    print("translate（真跑，**会花钱**）：%s" % args.txt)
+    r = translate_service.run(args.txt, key=args.key, tm_path=args.tm,
+                              do_all=not args.only_new, model=args.model, base=args.base,
+                              confirm=args.yes, progress=lambda s: print("  " + s))
+    if not r["ok"]:
+        print("  ✗ %s" % r["error"])
+        return 2
+    print("  ✅ 引擎跑完（返回码 %s）" % r["returncode"])
+    tail = (r["output"] or "").strip().splitlines()[-25:]
+    for ln in tail:
+        print("     " + ln)
+    translate_service.record_cost(db, args.project, items=0,
+                                  note=os.path.basename(args.txt or ""))
+    print("  （已记一笔到花费账本 ✓；跑完别忘了 `l10n pack` 打包、"
+          "以及用术语违规检查复核 ✓）")
+    return 0
+
+
 def build_parser():
     ap = argparse.ArgumentParser(prog="l10n", description="无冬之夜汉化工作台")
     ap.add_argument("--db", default=DEF_DB, help="中央库路径（默认 modl10n\\tm.sqlite）")
@@ -385,6 +439,31 @@ def build_parser():
     p = sub.add_parser("status", help="查看库里的进度")
     p.add_argument("--project", default=None)
     p.set_defaults(func=cmd_status)
+
+    p = sub.add_parser("pack", help="重新打包：把记忆库译文写回 .mod（0 次 API）")
+    p.add_argument("--mod", required=True, help=".mod 文件路径")
+    p.add_argument("--outdir", default=None, help="产物目录（默认 <模组目录>\\汉化产物）")
+    p.add_argument("--out", default=None, help="产物文件名")
+    p.add_argument("--inplace", action="store_true", help="覆盖原件（自动备份）")
+    p.add_argument("--project", default=None)
+    p.set_defaults(func=cmd_pack)
+
+    p = sub.add_parser("translate", help="翻译：默认只估价；加 --run 才真跑（会花钱 ✗）")
+    p.add_argument("--project", default=None)
+    p.add_argument("--container-id", type=int, default=None)
+    p.add_argument("--price-in", type=float, default=0.0, help="输入单价（元/百万 token）")
+    p.add_argument("--price-out", type=float, default=0.0, help="输出单价（元/百万 token）")
+    p.add_argument("--sample", type=int, default=6)
+    p.add_argument("--estimate-only", action="store_true", help="（默认行为，保留兼容 ✓）")
+    p.add_argument("--run", action="store_true", help="★ 真跑翻译（会调用 API、会花钱 ✗）")
+    p.add_argument("--txt", default=None, help="导出的 txt（--run 时必填）")
+    p.add_argument("--key", default=None, help="API key")
+    p.add_argument("--tm", default=None, help="记忆库路径（默认 modl10n\\tm.sqlite）")
+    p.add_argument("--model", default=None)
+    p.add_argument("--base", default=None)
+    p.add_argument("--only-new", action="store_true", help="只翻未翻译的（默认全量 --all）")
+    p.add_argument("--yes", action="store_true", help="★ 确认花钱（不加会被拒绝 ✗）")
+    p.set_defaults(func=cmd_translate)
     return ap
 
 

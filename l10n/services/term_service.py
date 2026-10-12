@@ -12,7 +12,12 @@ GUI 只调这一层；底层仍是 `TermRepo`（而它复用 `modl10n.glossary` 
       * 全库体检   → `violation_summary(..., limit=...)`，由界面**放后台线程**跑。
 """
 from functools import lru_cache
-from modl10n.glossary import Glossary
+# ★ 降噪常量（`STOP_EN` / `STRUCT_WORDS` / `in_compound`）的**单一真源在 `modl10n.glossary`**：
+#   2026-10-11 起，翻译前的术语注入（`modl10n.pipeline`）与这里的违规检查**必须共用同一份
+#   黑名单** —— 两边各存一份会漂移（一边拉黑了 `doom`、另一边没拉黑 → 注入进去的术语
+#   转头被自己判成"违规" ✗）。定义处仍是原来的内容，这里只 import，**行为零变化** ✓。
+from modl10n.glossary import Glossary, STOP_EN, STRUCT_WORDS, in_compound as _in_compound
+from modl10n.glossary import _strip_paren as _g_strip_paren
 
 import re
 import time
@@ -54,62 +59,10 @@ def _tolerant_re(en):
 NOUN_TYPES = {"race", "class", "prestige_class", "feat", "spell", "psionic", "martial",
               "monster", "deity", "place", "item", "name", "skill", "language", "creature"}
 
-# 即使 type 是专有名词类，这些**普通词**也不该报违规（它们在日常语境里就是普通含义）
-STOP_EN = {
-    "type", "ability", "good", "time", "level", "bonus", "force", "protection",
-    "character", "small", "turn", "shadow", "penalty", "healing", "hit", "kind",
-    "undead", "negate", "natural", "save", "skill", "attack", "damage", "mind",
-    "size", "speed", "fear", "light", "dark", "fire", "cold", "acid", "evil",
-    "chaos", "law", "magic", "armor", "weapon", "shield", "strength", "dexterity",
-    "constitution", "intelligence", "wisdom", "charisma", "poison", "disease",
-    "curse", "bless", "spell", "form", "shape", "body", "soul", "life", "death",
-    "power", "energy", "master", "lord", "lady", "king", "queen", "prince",
-    # ↓ 2026-10-11 看样本后确认是"真误报"的（日常词义，非术语义）：
-    #   `Doom`（"Doom, Despair!"＝毁灭；"Chamber of Doom"＝毁灭之室）30 处
-    #   `Disable`（"Disable Trap"＝解除陷阱，是**技能名**）20 处
-    #   `Bolt`（"1 Bolt"＝1 发弹药；"Bolt of Acid" 是复合法术名）13 处
-    #   `Hammer`（"One With The Hammer"＝与锤合一；"Hammer of Witches"＝女巫之锤）9 处
-    "doom", "disable", "bolt", "hammer",
-    # ↓ 2026-10-11 第四批（长尾抠除时逐个看样本确认的「日常词义」误报，用户拍板加入）：
-    #   `Bane`（"Bane of the Unsleeping"＝不眠者之灾 / "终极克星"；与神名班恩撞车）7 处
-    #   `Daze`（"Daze Monster"＝怪物眩晕 / 普通「眩晕」）6 处
-    #   `Adept`（日常「精通…」语境被匹到）4 处
-    #   `Deflect`（"Deflect Arrows"＝拨挡箭矢，是**另一个专长**）4 处
-    #   `Rebuke`（"Rebuke Undead"＝斥责不死生物，日常动词）4 处
-    #   `Run`（对话里的动词「快跑」）3 处、`Expansion`（内部标记 `## iprp_* 扩展 ##`）3 处
-    #   `Halt`（法术描述里的「停止」）3 处
-    "bane", "daze", "adept", "deflect", "rebuke", "run", "expansion", "halt",
-}
+# ★ 常量已上移到 `modl10n.glossary`（**单一真源**，见文件头 import 注释）：
+#   `STOP_EN`（普通词黑名单）/ `STRUCT_WORDS`（结构词）/ `_in_compound()`（复合专名判据）
+#   本模块只 import、不再自己定义 —— 两边不会再漂移 ✓
 
-
-# 结构化词：出现在术语前面时**不算**"复合专名的一部分"（否则 `Type of Feat: Adept` 会被误杀 ✗）
-STRUCT_WORDS = {
-    "type", "level", "feat", "feats", "spell", "spells", "class", "classes", "race",
-    "prerequisite", "prerequisites", "specifics", "benefit", "school", "component",
-    "components", "range", "target", "targets", "duration", "save", "casting", "area",
-    "use", "caster", "the", "a", "an", "of", "and", "or", "in", "on", "at", "for",
-    "with", "by", "to", "from", "this", "that", "these", "those", "your", "you",
-}
-
-
-def _in_compound(src, en):
-    """术语前面**紧邻一个首字母大写的英文词** → 它只是复合专名的一部分 ✗
-
-    实测（2026-10-10，595 处"专名形态但日常词义"的误报里的大头）：
-      · `Dragonfire Adept`（龙火术士）里的 `Adept`（侍僧）→ 98 条误报 ✗
-      · `Damage Resistance`（伤害减免）里的 `Resistance`（提升抗力）→ 69 条 ✗
-      · `Bolt of Acid`（酸液箭）里的 `Bolt`（箭石术）→ 大量 ✗
-    但**结构词要放行**：`Type of Feat: Adept` 里的 `Feat` 是结构词，这时 `Adept` 应按术语报 ✓
-    """
-    m = re.search(r"(?<![A-Za-z])" + re.escape(en) + r"(?![A-Za-z])", src)
-    if not m or m.start() == 0:
-        return False
-    pre = src[:m.start()].rstrip()
-    parts = re.split(r"[^A-Za-z']+", pre)
-    prev = parts[-1] if parts else ""
-    if not prev or not prev[0].isupper():
-        return False
-    return prev.lower() not in STRUCT_WORDS
 
 
 def violations(unit_repo, term_repo, tm_repo, project=None, limit=None,
@@ -158,6 +111,11 @@ def violations(unit_repo, term_repo, tm_repo, project=None, limit=None,
     for en, zh, dst, uid, proj, resref, src in unit_repo.db.execute(sql, params):
         if not zh or zh in dst:
             continue                                   # 完全采用 ✓
+        # ★ 2026-10-11：术语值里的括号是**术语表内部消歧用**的（`星质形态（灵能）`、
+        #   `快速恢复（异怪之书）`），要求正文原样包含它永远是误报 ✗ → 剥掉括号再比 ✓
+        core = _g_strip_paren(zh)
+        if core != zh and core and core in dst:
+            continue
         if fuzzy_head and len(zh) > fuzzy_head and zh[:fuzzy_head] in dst:
             continue                                   # 降噪 ③
         key = (en or "").lower()

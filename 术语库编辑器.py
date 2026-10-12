@@ -69,7 +69,9 @@ class App(tk.Tk):
     def __init__(self, db_path=None, project=None):
         super().__init__()
         self.title("术语库编辑器 — 无冬之夜汉化")
-        self.geometry("1180x720")
+        # ★ 2026-10-11：默认给大一点（配合"上下可拖"布局）；窗口可自由拉伸，但不许拖到看不见 ✓
+        self.geometry("1280x860")
+        self.minsize(900, 560)
         self.terms = []                    # [{en, zh, type, required, note}]
         self.draft = {}                    # {en: [{zh,n}...]} 从 dnd3r 草案导入的参考
         self.report = []                   # 核对报告的差异行
@@ -137,23 +139,38 @@ class App(tk.Tk):
         #   （表 unit_term + 视图 v_term_violation 早就建好，却一直是**空的孤儿** ✗，
         #    所以这个检查以前永远报 0；现在用 CLI `terms --action index-terms` 填充后可用 ✓）
         tk.Button(top, text="术语违规检查…", command=self.check_violations).pack(side="left", padx=6)
+        # ★ 2026-10-11 新增：**显示候选（candidate）**
+        #   背景：术语表里 active 约 6585 条，而 candidate（灰机 wiki 抓来的草案）有
+        #   **6832 条 / 涉及 5947 个英文**，界面上一直**完全看不到** ✗
+        #   （只有"某条 active 术语"的参考列能看到同英文的候选）
+        self.show_cand = tk.BooleanVar(value=False)
+        tk.Checkbutton(top, text="显示候选", variable=self.show_cand,
+                       command=self.reload).pack(side="left", padx=6)
         self.count_var = tk.StringVar()
         self.count_lbl = tk.Label(top, textvariable=self.count_var, fg="#555")
         self.count_lbl.pack(side="right")
 
         self._build_filter_panel()     # 折叠面板（默认收起，点「分类筛选」才展开 ✓）
 
-        pane = tk.PanedWindow(self, orient="horizontal", sashwidth=5)
+        # ★ 2026-10-11 用户反馈："下面的窗口太小了，能不能加入手动调整大小的功能"
+        #   → 上下两部分也做成**可拖动分隔条**（垂直 PanedWindow）✓
+        #   以前日志区是 `Text(height=11)` **固定高度、拖不动** ✗
+        vpane = tk.PanedWindow(self, orient="vertical", sashwidth=7, sashrelief="raised",
+                               bg="#bbb")
+        self.vpane = vpane
+        vpane.pack(fill="both", expand=True, padx=6, pady=(0, 6))
+
+        pane = tk.PanedWindow(vpane, orient="horizontal", sashwidth=5)
         self.pane = pane
-        pane.pack(fill="both", expand=True, padx=6, pady=(0, 4))
 
         left = tk.Frame(pane)
         vs = ttk.Scrollbar(left, orient="vertical")
-        self.tree = ttk.Treeview(left, columns=("en", "zh", "type", "req", "draft"),
+        self.tree = ttk.Treeview(left, columns=("en", "zh", "type", "status", "req", "draft"),
                                  show="headings", selectmode="browse", yscrollcommand=vs.set)
         vs.config(command=self.tree.yview)
-        for k, t, w in (("en", "英文", 210), ("zh", "当前译名", 130), ("type", "分类", 60),
-                        ("req", "必守", 46), ("draft", "dnd3r 参考（双击右侧列表可填入）", 260)):
+        for k, t, w in (("en", "英文", 200), ("zh", "当前译名", 130), ("type", "分类", 60),
+                        ("status", "状态", 56), ("req", "必守", 46),
+                        ("draft", "dnd3r 参考（双击右侧列表可填入）", 240)):
             # 用户要求：**只有「英文」和「必守」可排序** ✓；「分类」列标题改为筛选入口 ✓；
             # 其余列标题保持不可点 ✗（去掉多余的 ⇅，免得误以为能排）
             if k in ("en", "req"):
@@ -190,6 +207,12 @@ class App(tk.Tk):
         self.draft_list.pack(anchor="w", fill="both", expand=False, pady=(0, 6))
         self.draft_list.bind("<Double-Button-1>", self.use_draft)
         tk.Button(right, text="保存译名/分类（写入中央库）", command=self.save_zh).pack(anchor="w", pady=2)
+        # ★ 2026-10-11 新增：**术语表体检**（把"不像译名"的条目一次列出来）
+        tk.Button(right, text="🩺 术语表体检…（同英多译 / 带后缀 / 混英文 / 过长）",
+                  width=44, command=self.health_dialog).pack(anchor="w", pady=(2, 2))
+        # ★ 2026-10-11：**花费账本**（用户很在意"怎样让翻译花钱更少" ✓）
+        tk.Button(right, text="💰 花费统计…（累计 / 按天 / 按项目）",
+                  width=44, command=self.cost_dialog).pack(anchor="w", pady=(2, 2))
         tk.Label(right, text="▼ 一键统一译名（把已有译文里的旧写法全改成新写法，0 次 API）",
                  fg="#000", font=("", 9, "bold")).pack(anchor="w", pady=(10, 2))
         tk.Label(right, text="用法：先 ① 预览（只看不改）→ 没问题再 ② 执行", fg="#666").pack(anchor="w")
@@ -197,18 +220,38 @@ class App(tk.Tk):
                   command=lambda: self.unify(True)).pack(anchor="w", pady=2)
         tk.Button(right, text="② 一键统一 · 确认执行", width=30,
                   command=lambda: self.unify(False)).pack(anchor="w", pady=2)
-        tk.Button(right, text="打开核对报告（差异清单）", command=self.load_report).pack(anchor="w", pady=(10, 2))
+        # ★ 2026-10-11 新增：**批量操作可撤销**（每次 apply 前自动存被改行的旧值 ✓）
+        tk.Button(right, text="↩ 撤销上次批量操作", width=30,
+                  command=self.undo_last_batch).pack(anchor="w", pady=(4, 2))
+        tk.Button(right, text="打开核对报告（差异清单）· 双击即采纳", command=self.load_report).pack(anchor="w", pady=(10, 2))
         tk.Button(right, text="导出 glossary.json 快照（可选，不自动）",
                   command=self.export_glossary_json).pack(anchor="w", pady=(4, 2))
+        # ★ 2026-10-11 新增：**一键重建产物**（把记忆库写进游戏真正使用的 TLK）
+        #   以前「一键统一」执行完只弹一句"请重建受影响的产物"，用户得自己切命令行跑
+        #   `python rebuild_tlk_safe.py --apply` ✗
+        tk.Label(right, text="▼ 重建并安装 TLK（0 次 API；自动备份；保留自加界面槽位）",
+                 fg="#000", font=("", 9, "bold")).pack(anchor="w", pady=(10, 2))
+        tk.Button(right, text="③ 重建产物 · 预览（不写任何文件）", width=34,
+                  command=lambda: self.rebuild_tlk_dialog(True)).pack(anchor="w", pady=2)
+        tk.Button(right, text="④ 重建产物 · 确认执行并安装", width=34,
+                  command=lambda: self.rebuild_tlk_dialog(False)).pack(anchor="w", pady=2)
         # ★ 用户 2026-10-08 需求：在术语库这边改完，也能**就地**把结果推到 TLK
         tk.Button(right, text="▼ 把记忆库回填到 TLK…（选文件，先预览，自动备份）",
                   width=44, command=self.fill_tlk_dialog).pack(anchor="w", pady=(8, 2))
         pane.add(right, width=460)      # ⚠ 必须 add 才会显示（我第一版漏了这行，右侧面板整个不可见 ✗）
 
-        self.log = tk.Text(self, height=11, wrap="word")
-        self.log.pack(fill="both", padx=6, pady=(0, 6))
+        # 水平 pane 放进垂直 pane 的**上半区**（下半区是日志）
+        vpane.add(pane, height=560)
+
+        # ★ 日志区：放进 vpane 的**下半区**，拖动分隔条即可自由调整高度 ✓
+        logf = tk.Frame(vpane)
+        tk.Label(logf, text="日志/报告　（▲▼ 拖动上面的分隔条可调整高度）",
+                 fg="#666").pack(anchor="w")
+        self.log = tk.Text(logf, height=9, wrap="word")
+        self.log.pack(fill="both", expand=True)
         self.log.insert("1.0", "提示：改译名后先「保存译名」，再「预览影响面」，确认无误才「确认执行」。\n")
         self.log.config(state="disabled")
+        vpane.add(logf, height=260)
 
     # ---------- 数据 ----------
     def check_violations(self, limit=60):
@@ -257,10 +300,14 @@ class App(tk.Tk):
             self.terms = []
             self.say("⚠ 中央库打不开：%s（术语列表为空）" % self.db_path)
         else:
+            # ★ 2026-10-11：勾了「显示候选」就把 candidate 一起列出来（rejected 永不显示）
+            show_cand = bool(getattr(self, "show_cand", None) and self.show_cand.get())
+            st = "all" if show_cand else "active"
             self.terms = [{"en": t.en, "zh": t.zh, "type": t.type,
                            "required": bool(t.required), "note": t.note,
                            "status": t.status}
-                          for t in tr.list(status="active")]
+                          for t in tr.list(status=st)
+                          if t.status == "active" or (show_cand and t.status == "candidate")]
         # 启动就自动吃草案（否则「dnd3r 参考」列是空的，用户会以为坏了 ✗）
         if not self.draft:
             self.draft = load_json(DRAFT, {})
@@ -315,9 +362,12 @@ class App(tk.Tk):
             self.visible.append(t)
             self.tree.insert("", "end", iid="r%d" % (len(self.visible) - 1),
                              values=(t["en"], t["zh"], self.TYPE_ZH.get(t.get("type", "misc"), "其他"),
+                                     "候选" if t.get("status") == "candidate" else "生效",
                                      "✓" if t["required"] else "", ref))
-        self.count_var.set("显示 %d / 术语表 %d 条；dnd3r 参考 %d 条"
-                           % (len(self.visible), len(self.terms), len(self.draft)))
+        n_cand = sum(1 for t in self.terms if t.get("status") == "candidate")
+        self.count_var.set("显示 %d / 术语表 %d 条%s；dnd3r 参考 %d 条"
+                           % (len(self.visible), len(self.terms),
+                              "（含候选 %d）" % n_cand if n_cand else "", len(self.draft)))
 
     def on_pick(self, _ev=None):
         sel = self.tree.selection()
@@ -369,15 +419,88 @@ class App(tk.Tk):
         self.say("已填入参考译名（可再改），别忘了点「保存译名」")
 
     def load_report(self):
+        """核对报告（差异清单）—— **可交互**：双击一行就采纳 ✓
+
+        ★ 用户 2026-10-07 原话："这个功能有什么用？我似乎只能查看不同，却没法进行
+          选择用哪个译名" —— 旧实现只是把 TSV 打印到日志区（最多 200 行），
+          **只能看不能用** ✗。现在改成独立窗口 + 表格：
+            · **双击某行** = 采用「库（资料）」的写法（把正文里的当前译文统一过去）
+            · 选中再点下方按钮 = 采用「你（当前译文）」的写法（把它立为规范译名）
+          两个方向都先走 `rename_service.plan()` 出**影响面预览**，确认后才执行 ✓
+        """
         if not os.path.exists(REPORT):
             messagebox.showinfo("没有报告", "没找到 %s\n先跑：python dnd_mine.py" % os.path.basename(REPORT))
             return
-        rows = open(REPORT, encoding="utf-8-sig").read().splitlines()[1:]
-        self.say("=== 核对报告（%d 条差异；「库」是资料里的写法，「你」是当前译文）===" % len(rows))
-        for ln in rows[:200]:
-            f = ln.split("\t")
-            if len(f) >= 4:
-                self.say("  %-24s 库=%-12s 你=%-16s [%s]" % (f[0][:24], f[1][:12], f[3][:16], f[4] if len(f) > 4 else ""))
+        raw = open(REPORT, encoding="utf-8-sig").read().splitlines()
+        rows = [f for f in (ln.split("\t") for ln in raw[1:]) if len(f) >= 4 and f[0].strip()]
+        if not rows:
+            messagebox.showinfo("报告是空的", "%s 里没有差异行。" % os.path.basename(REPORT))
+            return
+
+        dlg = tk.Toplevel(self)
+        dlg.title("核对报告 · 双击一行 = 采用「库」的写法")
+        dlg.transient(self)
+        dlg.geometry("860x520")
+        tk.Label(dlg, text="双击某行 = 采用「库（资料）」的写法｜选中后点下面按钮 = 采用「你（当前译文）」的写法",
+                 fg="#333").pack(anchor="w", padx=8, pady=(6, 2))
+        tk.Label(dlg, text="报告：%s（%d 条差异）" % (os.path.basename(REPORT), len(rows)),
+                 fg="#777").pack(anchor="w", padx=8)
+        tv = ttk.Treeview(dlg, columns=("en", "lib", "mine", "n"), show="headings", height=16)
+        for k, t, w in (("en", "英文", 240), ("lib", "库（资料里的写法）", 200),
+                        ("mine", "你（当前译文）", 200), ("n", "处数", 60)):
+            tv.heading(k, text=t)
+            tv.column(k, width=w, anchor="w")
+        vs = ttk.Scrollbar(dlg, orient="vertical", command=tv.yview)
+        tv.configure(yscrollcommand=vs.set)
+        vs.pack(side="right", fill="y", padx=(0, 6))
+        tv.pack(fill="both", expand=True, padx=(8, 0), pady=4)
+        for f in rows:
+            tv.insert("", "end", values=(f[0], f[1], f[3], f[4] if len(f) > 4 else ""))
+
+        def accept(use_lib=True):
+            sel = tv.selection()
+            if not sel:
+                messagebox.showinfo("先选一行", "请先点选（或双击）一行差异。")
+                return
+            en, lib, mine = (tv.item(sel[0], "values") + ("", "", ""))[:3]
+            old, new = (str(mine).strip(), str(lib).strip()) if use_lib else (str(lib).strip(), str(mine).strip())
+            if not old or not new or old == new:
+                messagebox.showinfo("这一行不用改", "「库」与「你」有一个为空或两者相同：\n库=%r\n你=%r" % (lib, mine))
+                return
+            tm_repo, term_repo = self._tm(), self._term()
+            if tm_repo is None or term_repo is None:
+                messagebox.showerror("打不开中央库", "中央库不可用。")
+                return
+            try:
+                rep = rename_service.plan(tm_repo, term_repo, [(old, new)], en_override=en or None)
+            except Exception as ex:                                # noqa: BLE001
+                messagebox.showerror("预览失败", repr(ex))
+                return
+            r = rep[0]
+            warn = "".join("\n⚠ %s" % w for w in (r.get("risky") or []))
+            if not messagebox.askyesno(
+                    "确认采纳",
+                    "英文：%s\n把「%s」改成「%s」\n\n将改记忆库 %d 条｜护栏：%s%s\n\n执行？"
+                    % (en, old, new, r["tm_rows"], r["guard"] or "（无！会全库替换）", warn)):
+                return
+            try:
+                res = rename_service.apply(tm_repo, term_repo, [(old, new)], rep)
+            except Exception as ex:                                # noqa: BLE001
+                messagebox.showerror("执行失败", repr(ex))
+                return
+            self.say("采纳 [%s] %s → %s：改记忆库 %d 条、术语 %d 条"
+                     % (en, old, new, res["tm_rows"], res["terms"]))
+            self.reload()
+            messagebox.showinfo("已采纳", "已改 %d 条。\n\n别忘了点 ④「重建产物 · 确认执行并安装」把结果写进游戏。" % res["tm_rows"])
+
+        tv.bind("<Double-Button-1>", lambda _e: accept(True))
+        bar = tk.Frame(dlg)
+        bar.pack(fill="x", padx=8, pady=(0, 8))
+        tk.Button(bar, text="采用「库」的写法（把当前译文统一成资料写法）",
+                  command=lambda: accept(True)).pack(side="left")
+        tk.Button(bar, text="采用「你」的写法（立为规范译名）",
+                  command=lambda: accept(False)).pack(side="left", padx=8)
+        tk.Button(bar, text="关闭", command=dlg.destroy).pack(side="right")
 
     # ---------- 动作 ----------
     def export_glossary_json(self):
@@ -522,7 +645,7 @@ class App(tk.Tk):
         if self.filter_open:
             self.filter_panel.pack_forget()
         else:
-            self.filter_panel.pack(fill="x", padx=6, pady=(0, 4), before=self.pane)
+            self.filter_panel.pack(fill="x", padx=6, pady=(0, 4), before=self.vpane)
         self.filter_open = not self.filter_open
 
     def toggle_sort(self, key):
@@ -613,7 +736,8 @@ class App(tk.Tk):
             self.say("  已改记忆库 %d 条、写入术语 %d 条、替换规则 %d 条（记忆库改动标 manual）"
                      % (res["tm_rows"], res["terms"], res["variants"]))
             messagebox.showinfo("完成", "记忆库与术语表已更新。\n"
-                                       "请重建受影响的产物（0 次 API）。")
+                                       "下一步：点右侧 ④「重建产物 · 确认执行并安装」\n"
+                                       "把结果写进游戏用的 TLK（0 次 API）。")
         tk.Button(dlg, text=("预览影响面" if dry else "确认执行"), command=go).grid(
             row=4, column=0, columnspan=2, pady=8)
 
@@ -678,6 +802,155 @@ class App(tk.Tk):
             messagebox.showwarning("回填完成但有异常",
                                    "应改未改 %d / 误改 %d\n备份：%s"
                                    % (len(res["bad"]), len(res["untouched_bad"]), res["backup"]))
+
+    def rebuild_tlk_dialog(self, dry):
+        """③④ **重建并安装 TLK**（0 次 API）—— 把记忆库真正写进游戏用的那个 TLK ✓
+
+        以前「一键统一」执行完只弹一句"请重建受影响的产物（0 次 API）"，
+        用户得自己切到命令行跑 `python rebuild_tlk_safe.py --apply` ✗。
+
+        逻辑已收进 `l10n/services/rebuild_service.py`（含**保留自加界面槽位**的关键一步）。
+        重建约 30~60 秒 → 放**子线程**，否则界面会卡死 ✗（用户最反感那类问题）。
+        """
+        from l10n.services import rebuild_service
+        try:
+            info = rebuild_service.survey()
+        except Exception as ex:                                    # noqa: BLE001
+            messagebox.showerror("重建产物", repr(ex))
+            return
+        if not info["ok"]:
+            messagebox.showerror("重建产物", "预演失败：%s\n缺文件：\n%s"
+                                 % (info["error"], "\n".join(info["missing"] or [])))
+            return
+        lines = [
+            "TLK：%s" % os.path.basename(rebuild_service.DEF_GAME_TLK),
+            "当前有文本槽位：%d" % info["texts"],
+            "**自加界面槽位**（重建时必须并回，否则界面文字会没）：%d 个" % info["custom"],
+            "",
+            "做法：① 用「英文原版 + 记忆库」重建 → ② 并回自加槽位 → ③ 校验 → ④ 安装",
+            "安装前自动备份为 %s.安全重建前_<时间戳>" % os.path.basename(rebuild_service.DEF_GAME_TLK),
+            "全程 0 次 API，约 30~60 秒。",
+        ]
+        if info["samples"]:
+            lines += ["", "自加槽位样例："] + ["  #%s = %s" % kv for kv in info["samples"]]
+        if dry:
+            self.say("=== 重建产物 · 预览（没有写任何文件）===")
+            for ln in lines:
+                self.say("  " + ln)
+            messagebox.showinfo("重建产物 · 预览", "\n".join(lines) + "\n\n（这只是预览，没写任何文件）")
+            return
+        if not messagebox.askyesno("重建产物 · 确认", "\n".join(lines) + "\n\n现在执行并安装？"):
+            return
+        self.say("=== 重建产物 · 执行中（约 30~60 秒）===")
+
+        def work():
+            res = rebuild_service.rebuild_and_install(
+                progress=lambda m: self.after(0, self.say, "  " + m))
+            self.after(0, done, res)
+
+        def done(res):
+            if res["ok"]:
+                self.say("  ✅ 完成：%d 个槽位有文本、自加槽位 %d 个、总数 %d"
+                         % (res["rebuilt"], res["custom"], res["total"]))
+                messagebox.showinfo("重建产物", "已重建并安装 ✓\n\n槽位总数：%d\n自加槽位：%d 个（保留 ✓）\n备份：\n%s"
+                                    % (res["total"], res["custom"], res["backup"]))
+            else:
+                self.say("  ✗ 失败：%s" % res["error"])
+                messagebox.showerror("重建产物失败", str(res["error"]))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def undo_last_batch(self):
+        """↩ **撤销上次批量操作** —— `undo_service` 存的是**行级**旧值快照（不复制整个库 ✓）。
+
+        2026-10-11 加：一天里批量改写误伤过 3 次（`抗抗解除缓冲`、`鳞族人人`、
+        `Suppress` 吃掉动词句 ✗），所以每次「确认执行」都会自动留一份"被改行的旧值" ✓
+        """
+        from l10n.services import undo_service
+        tm = self._tm()
+        if tm is None:
+            messagebox.showerror("打不开中央库", "中央库不可用。")
+            return
+        bs = undo_service.list_batches(tm.db, 5)
+        if not bs:
+            messagebox.showinfo("没有可撤销的批次",
+                                "还没有批量操作记录。\n（每次「② 一键统一 · 确认执行」"
+                                "或核对报告里「采纳」时，都会自动存一份旧值快照 ✓）")
+            return
+        lines = ["最近可撤销的批次："]
+        lines += ["  #%s  %s  %s（%s 行）" % (b[0], b[1], b[2], b[3]) for b in bs]
+        lines += ["", "将撤销**最近一批**：%s（%s 行）" % (bs[0][2], bs[0][3]), "", "确定？"]
+        if not messagebox.askyesno("撤销上次批量操作", "\n".join(lines)):
+            return
+        res = undo_service.undo(tm.db, bs[0][0])
+        if res["ok"]:
+            self.say("↩ 已撤销：%s（回写 %d 行）" % (res["label"], res["n"]))
+            self.reload()
+            messagebox.showinfo("已撤销", "已回写 %d 行。\n\n"
+                                          "别忘了点 ④「重建产物 · 确认执行并安装」让改动进游戏。"
+                                % res["n"])
+        else:
+            messagebox.showerror("撤销失败", str(res.get("error")))
+
+    def health_dialog(self):
+        """🩺 **术语表体检**（只读）：把"不像译名"的条目一次列出来 ✓
+
+        判据全部来自 2026-10-11 实际踩过的坑：同英多译（被写脏的第一信号 ✗）、
+        译名带「（灵能）」后缀、译名里混英文、译名过长（句子片段被当术语）。
+        """
+        from l10n.services import term_health_service
+        tr = self._term()
+        if tr is None:
+            messagebox.showerror("打不开中央库", "中央库不可用。")
+            return
+        g = term_health_service.health(tr)
+        title = term_health_service.summary(g)
+        self.say("\n=== " + title + " ===")
+        dlg = tk.Toplevel(self)
+        dlg.title("术语表体检")
+        dlg.transient(self)
+        dlg.geometry("820x540")
+        tk.Label(dlg, text=title, fg="#333").pack(anchor="w", padx=8, pady=(6, 2))
+        tk.Label(dlg, text="（只读；这里只列问题，改哪条由你在主界面里点选后保存）",
+                 fg="#777").pack(anchor="w", padx=8)
+        tv = ttk.Treeview(dlg, columns=("k", "en", "zh", "why"), show="headings", height=18)
+        for k, t, w in (("k", "类别", 140), ("en", "英文", 220), ("zh", "译名", 220),
+                        ("why", "说明", 190)):
+            tv.heading(k, text=t)
+            tv.column(k, width=w, anchor="w")
+        NAME = [("dup_en", "同英多译（歧义）"), ("suffix", "带括号后缀"), ("ascii", "混英文"),
+                ("long", "过长"), ("empty", "空译名")]
+        n = 0
+        for key, label in NAME:
+            for en, zh, why in (g.get(key) or []):
+                tv.insert("", "end", values=(label, en, zh, why))
+                self.say("  [%s] %s = %s（%s）" % (label, en, zh, why))
+                n += 1
+        tv.pack(fill="both", expand=True, padx=8, pady=4)
+        tk.Button(dlg, text="关闭", command=dlg.destroy).pack(pady=(0, 8))
+        if not n:
+            self.say("  （没发现问题 ✓）")
+
+    def cost_dialog(self):
+        """💰 **花费统计**（只读）—— 用户很在意"怎样让翻译花钱更少" ✓
+
+        数据来自 `cost_log`（`cost_service.record()` 写入；每次翻译/批量调用记一笔 ✓）。
+        """
+        from l10n.services import cost_service
+        db = self._db()
+        if db is None:
+            messagebox.showerror("打不开中央库", "中央库不可用。")
+            return
+        s = cost_service.summary(db)
+        head = cost_service.human(s)
+        self.say("\n=== %s ===" % head)
+        if not s["runs"]:
+            self.say("  （还没有记录；每次翻译跑完后由 cost_service.record() 落账 ✓）")
+        for d, n, items, cost in s["by_day"]:
+            self.say("  按天 %s：%d 次 / %d 条 / %.2f 元" % (d, n, items, cost))
+        for p, n, items, cost in s["by_project"]:
+            self.say("  按项目 [%s]：%d 次 / %d 条 / %.2f 元" % (p, n, items, cost))
+        messagebox.showinfo("花费统计", head + "\n\n（明细已打到下方日志区）")
 
     def say(self, s):
         self.log.config(state="normal")

@@ -19,7 +19,7 @@ import sqlite3
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TM = os.path.join(HERE, "modl10n", "tm.sqlite")
-BACKUP_DIR = os.path.join(HERE, "..", "tmp", "备份")
+BACKUP_DIR = os.path.join(HERE, "tmp", "备份")
 
 ADOPT = {
     # —— 九剑（ToB）——

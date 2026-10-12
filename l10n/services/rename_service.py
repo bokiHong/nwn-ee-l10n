@@ -17,6 +17,7 @@ import re
 from modl10n.rename import rows_containing, rows_of_rename   # 内核：保持原样给 CLI 用
 
 from ..model import Term
+from . import undo_service                                   # ★ 批量可撤销快照
 
 _PLURAL_TAIL = re.compile(r"(s|x|ch|sh)$", re.I)
 
@@ -32,7 +33,7 @@ _PLURAL_TAIL = re.compile(r"(s|x|ch|sh)$", re.I)
 #
 # 所以：① **旧译名过短就拒绝自动执行**（短串必然误伤）；
 #       ② 执行前逐行**长术语优先**校验，若该行英文匹配的长术语译名被换没了，
-#          **跳过该行**并记账 ✓（判据与 `tmp\_plan_restore_1009.py` 的 `r3_revoke` 同源）。
+#          **跳过该行**并记账 ✓（判据与 `tmp\\_plan_restore_1009.py` 的 `r3_revoke` 同源）。
 # ---------------------------------------------------------------------------
 MIN_SAFE_OLD_LEN = 3
 
@@ -50,7 +51,7 @@ def _long_terms_lost(terms, src, before, after):
     ★ **长术语优先**（2026-10-10 补）：`Justice of Weald and Woe`（林灾审判者）里
     含 `Justice`（正义）—— 把前者换成规范译名时，短术语 `Justice=正义` 必然"消失" ✗，
     于是护栏误报"会破坏长术语"、把 23 行全部跳过 ✗。
-    判据与 `tmp\_plan_restore_1009.py` 的 `r3_revoke` 同源：**英文是更长命中术语子串的，不单独计** ✓
+    判据与 `tmp\\_plan_restore_1009.py` 的 `r3_revoke` 同源：**英文是更长命中术语子串的，不单独计** ✓
     """
     if not src:
         return []
@@ -72,6 +73,25 @@ def _long_terms_lost(terms, src, before, after):
         if t.zh and len(t.zh) >= 2 and t.zh in before and t.zh not in after:
             lost.append("%s=%s" % (t.en, t.zh))
     return lost
+
+
+# ★ 2026-10-11 新增：**非目标差异**拦截 —— 替换后不许冒出"新的重复字" ✗
+#
+# 起因：一天里踩了两次同类坑 ——
+#   `抗解除缓冲` + replace(`解除缓冲`, `抗解除缓冲`) → `抗抗解除缓冲` ✗
+#   `瑞尔坎人`   + replace(`瑞尔坎`, `鳞族人`)        → `鳞族人人` ✗
+# 判据：`after` 里出现了 `before` 里**没有**的中文单字重复（`XX`）→ **拒改该行**并记账 ✓
+#   （`能能手手` 这类**原本就有**的重复不受影响 ✓）
+_REPEAT = re.compile(r"([\u4e00-\u9fff])\1")
+
+
+def _sick_after(before, after):
+    """返回"替换后新冒出来的重复字"（没有则 None）。见上方说明。"""
+    had = set(_REPEAT.findall(before or ""))
+    for ch in _REPEAT.findall(after or ""):
+        if ch not in had:
+            return ch
+    return None
 
 
 def _tolerant_rx(en):
@@ -137,6 +157,12 @@ def plan(tm_repo, term_repo, renames, en_override=None, include_empty_src=True):
     for old, new in renames:
         hits_all = term_repo.by_zh(old)
         guard = en_override or (hits_all[0].en if hits_all else None)
+        # ★ 2026-10-11：标记"**虚拟术语**"—— plan 为了"只扫正文"临时造的 Term，
+        #   它的 en 是**护栏**（有时是 `Weald` 这种根本不是术语的词）而不是真术语 ✗
+        #   若不管，`apply()` 会把它们**写进术语表**：实测 `Weald`=林灾审判者、
+        #   `Dragon Disciple`=哪种龙脉术士、`Dragonwrought`=仅限1级或龙类进化且3级
+        #   都被写脏过 ✗（详见 lesson「apply 虚拟术语污染」）。
+        virtual = set()
         if en_override:
             # ★ **显式护栏优先**：按"旧译名"反查可能查到**同名但不同英文**的术语 ——
             #   实测：`灵魂法师` 既是 `Anima Mage` 的**正确**译名，又是 `Soulcaster`
@@ -145,12 +171,14 @@ def plan(tm_repo, term_repo, renames, en_override=None, include_empty_src=True):
             if not hits:
                 hits = [Term(en=en_override, zh=new, required=1,
                              note="术语表译名已是新名（仅扫正文）")]
+                virtual.add(en_override)
         else:
             hits = hits_all
             if guard and not hits:
                 # 术语表已是新名：只做"按英文护栏扫正文"的替换
                 hits = [Term(en=guard, zh=new, required=1,
                              note="术语表译名已是新名（仅扫正文）")]
+                virtual.add(guard)
         rows = rows_of_rename_tolerant(tm_repo, old, new, guard, include_empty_src)
         empty = [r for r in rows if not (r[1] or "").strip()]
         # 没有英文护栏时退化成"全库替换"——必须明确告警
@@ -168,7 +196,8 @@ def plan(tm_repo, term_repo, renames, en_override=None, include_empty_src=True):
             mods[m] = mods.get(m, 0) + 1
         report.append({
             "old": old, "new": new, "guard": guard,
-            "glossary_hits": [{"en": h.en, "zh": h.zh, "required": bool(h.required)}
+            "glossary_hits": [{"en": h.en, "zh": h.zh, "required": bool(h.required),
+                               "virtual": h.en in virtual}
                               for h in hits],
             "tm_rows": len(rows), "loose_rows": len(loose), "empty_src_rows": len(empty),
             "mods": mods,
@@ -198,6 +227,8 @@ def apply(tm_repo, term_repo, renames, report, include_empty_src=True, force=Fal
         if r.get("risky") and not force:
             raise RiskyRenameRefused("；".join(r["risky"]))
         for h in r["glossary_hits"]:
+            if h.get("virtual"):
+                continue          # ★ 虚拟术语（护栏）**绝不写进术语表** ✗（见 plan 的说明）
             term_repo.set_zh(h["en"], new, required=True, src="rename",
                              note="术语统一：%s -> %s" % (old, new))
             terms_written += 1
@@ -205,17 +236,23 @@ def apply(tm_repo, term_repo, renames, report, include_empty_src=True, force=Fal
             [(old, new, r.get("guard"), "*", "术语统一：%s -> %s" % (old, new))])
         rows = rows_of_rename_tolerant(tm_repo, old, new, r["guard"], include_empty_src)
         n_skip = 0
+        # ★ 2026-10-11：改之前先开一个**可撤销批次**（只记被改行的旧值，不复制整个库 ✓）
+        bid = undo_service.begin(tm_repo.db, "术语统一：%s -> %s" % (old, new))
         for rid, src, dst, _m in rows:
             fixed = dst.replace(old, new)
             lost = _long_terms_lost(terms, src, dst, fixed)
-            if lost:
-                skipped.append({"rowid": rid, "old": old, "new": new, "lost": lost,
+            sick = None if lost else _sick_after(dst, fixed)
+            if lost or sick:
+                skipped.append({"rowid": rid, "old": old, "new": new,
+                                "lost": lost or ["替换后会冒出重复字「%s%s」" % (sick, sick)],
                                 "before": dst[:80], "after": fixed[:80]})
                 n_skip += 1
                 continue
             tm_repo.db.execute("UPDATE tm SET dst=?, status='manual' WHERE rowid=?",
                                (fixed, rid))
+            undo_service.record(tm_repo.db, bid, rid, dst)
         tm_repo.db.commit()
+        undo_service.finish(tm_repo.db, bid)
         tm_rows += len(rows) - n_skip
     return {"tm_rows": tm_rows, "terms": terms_written, "variants": variants_written,
             "skipped_breaks": skipped}

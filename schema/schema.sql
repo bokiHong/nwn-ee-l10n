@@ -36,6 +36,7 @@ CREATE TABLE container (
     scanned   TEXT,
     UNIQUE(project, role, path)
 );
+CREATE TABLE cost_log(id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, project TEXT, kind TEXT, items INTEGER, tokens_in INTEGER, tokens_out INTEGER, price_in REAL, price_out REAL, cost REAL, note TEXT);
 CREATE TABLE mods (
     name     TEXT PRIMARY KEY,
     path     TEXT,

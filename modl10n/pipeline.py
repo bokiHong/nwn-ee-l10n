@@ -8,7 +8,8 @@
 常用选项：
     --sf01 FILE       走路线 A（用 NWN MultiLang 导出的文本），默认路线 B（自研抽取）
     --tm FILE         翻译记忆 sqlite（默认 modl10n/tm.sqlite）
-    --glossary FILE   术语表 json（默认 modl10n/glossary.json）
+    --glossary FILE   术语表来源：*.sqlite -> term 表（**默认**，最新真源）；
+                      *.json -> 冻结快照（2026-10-08，215 条，会打印过期警告 ✗）
     --outdir DIR      产物目录（默认与 .mod 同目录）
     --workers N       并发（默认 5）
     --limit N         只翻 N 条（冒烟测试）
@@ -389,7 +390,8 @@ def build_parser():
     ap.add_argument("--mod", required=True)
     ap.add_argument("--sf01", default=None, help="路线 A：NWN MultiLang 导出的文本文件")
     ap.add_argument("--tm", default=DEF_TM)
-    ap.add_argument("--glossary", default=DEF_GLOSSARY)
+    ap.add_argument("--glossary", default=DEF_TM,
+                    help="术语表来源：*.sqlite -> term 表（默认，最新真源）；*.json -> 冻结快照")
     ap.add_argument("--outdir", default=None)
     ap.add_argument("--out", default=None,
                     help="直接指定输出文件路径（例如写回原始 mod 的文件名）")
@@ -414,16 +416,72 @@ def build_parser():
     return ap
 
 
+def load_glossary(path, tm_path=None):
+    """加载术语表（**自动判别来源**）-> `(Glossary, report)`。
+
+    ★ 2026-10-11：这里以前固定读 `glossary.json` —— 那是 2026-10-08 的**冻结快照**
+      （215 条），而术语真源早在 Sprint 4 就搬到了 `tm.sqlite` 的 `term` 表
+      （6,585 条 active / 1,750 必守）。于是"翻译时注入的术语"比"术语库里的术语"
+      落后两个版本，**不报错、只是悄悄少注入** ✗ ——
+      实测 Ch3 待译 6,640 条文本上：旧快照只命中 **26** 个术语，新真源命中 **148** 个。
+      现在默认读 term 表；显式给 `.json` 仍然可用（回退），但会**打印过期警告** ✓。
+    """
+    fallback = None
+    if not (path and os.path.exists(path)):
+        fallback, path = path, DEF_GLOSSARY
+    if path and os.path.exists(path):
+        gl, rep = Glossary.load_auto(path)
+    else:
+        gl, rep = Glossary([]), {"source": None, "terms": 0, "hard": 0, "soft": 0}
+    if fallback:
+        rep["fallback_from"] = fallback
+    rep["tm"] = tm_path or DEF_TM
+    rep["source_kind"] = rep.get("source_kind") or "term-db"
+    # 快照来源 -> 顺手查一下最新真源有多少条，好在日志里把"落后多少"说清楚 ✓
+    if rep["source_kind"] == "json-snapshot" and os.path.exists(rep["tm"]):
+        try:
+            import sqlite3
+            con = sqlite3.connect("file:%s?mode=ro" % os.path.abspath(rep["tm"])
+                                  .replace("\\", "/"), uri=True)
+            rep["latest_terms"] = con.execute(
+                "SELECT COUNT(*) FROM term WHERE status='active'").fetchone()[0]
+            con.close()
+        except Exception:                                       # noqa: BLE001
+            rep["latest_terms"] = None
+    return gl, rep
+
+
+def describe_glossary(gl, rep, indent="  "):
+    """把术语来源与档位打印出来（**不再静默** ✓）—— 返回要 print 的多行文本。"""
+    kind = ("冻结快照 JSON（`glossary.json`）" if rep.get("source_kind") == "json-snapshot"
+            else "term 表（最新真源）")
+    lines = ["%s术语表：%s —— %d 条（硬档·译后强校验 %d / 软档·仅建议 %d）"
+             % (indent, kind, len(gl), gl.hard, gl.soft)]
+    lines.append("%s  来源：%s" % (indent, rep.get("source")))
+    if rep.get("conflicts"):
+        lines.append("%s  同英多译（有歧义、已跳过不注入）%d 个" % (indent, rep["conflicts"]))
+    if rep.get("skipped"):
+        lines.append("%s  普通词黑名单跳过 %d 条（`STOP_EN`）" % (indent, rep["skipped"]))
+    if rep.get("fallback_from"):
+        lines.append("%s  ⚠ 指定的术语源不存在（%s），已回退到快照" % (indent, rep["fallback_from"]))
+    if rep["source_kind"] == "json-snapshot":
+        lines.append("%s  ⚠⚠ 这是**冻结快照**，不是最新术语 ✗ —— 最新真源 term 表有 %s 条 active。"
+                     % (indent, rep.get("latest_terms")))
+        lines.append("%s      要用最新术语请加：--glossary \"%s\""
+                     % (indent, os.path.join(HERE, "tm.sqlite")))
+    return "\n".join(lines)
+
+
 def make_context(args):
     os.makedirs(args.outdir or os.path.dirname(os.path.abspath(args.mod)), exist_ok=True)
     tm = TM(args.tm)
-    gl = Glossary.load(args.glossary)
+    gl, grep = load_glossary(args.glossary, tm_path=args.tm)
     from .translator import Translator, read_api_key
     key = read_api_key(args.api_key)
     tr = None
     if key and not args.extract_only and not args.dry_run:
         tr = Translator(key, glossary=gl, punct=args.punct)
-    return tm, gl, tr, key
+    return tm, gl, tr, key, grep
 
 
 def main(argv=None):
@@ -432,9 +490,9 @@ def main(argv=None):
         args.outdir = os.path.join(os.path.dirname(os.path.abspath(args.mod)), "汉化产物")
     if not args.mod or not os.path.exists(args.mod):
         raise SystemExit("找不到 .mod：%s" % args.mod)
-    tm, gl, tr, key = make_context(args)
-    print("翻译记忆 %s（已有 %d 条 %s）；术语表 %d 条"
-          % (args.tm, tm.count(), tm.stats(), len(gl)))
+    tm, gl, tr, key, grep = make_context(args)
+    print("翻译记忆 %s（已有 %d 条 %s）" % (args.tm, tm.count(), tm.stats()))
+    print(describe_glossary(gl, grep))
     if tr is None and not (args.extract_only or args.dry_run):
         raise SystemExit("未找到 API Key（--api-key / 环境变量 DEEPSEEK_API_KEY / .api_key 文件）")
     rep = process(args.mod, args, tm=tm, glossary=gl, translator=tr)

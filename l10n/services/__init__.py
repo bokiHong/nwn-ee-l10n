@@ -20,6 +20,8 @@ from .diff_service import diff, summarize as summarize_diff              # noqa:
 from .plan_service import plan, summarize as summarize_plan, estimate    # noqa: F401
 from .tlk_service import TlkDoc, open_tlk, import_txt, save_to_memory    # noqa: F401
 from .tlk_fill_service import fill_tlk, plan_fill                        # noqa: F401
+from .rebuild_service import survey as survey_rebuild                    # noqa: F401
+from .rebuild_service import rebuild_and_install as rebuild_and_install_tlk  # noqa: F401
 from .term_service import status_of_text, violation_summary              # noqa: F401
 from .term_editor_service import guess_type, save_term                   # noqa: F401
 from .mod_service import ModDoc, open_mod_doc, nl_of, raw_key            # noqa: F401
@@ -31,6 +33,7 @@ __all__ = ["scan", "require_container", "guess_fmt",
            "diff", "summarize_diff", "plan", "summarize_plan", "estimate",
            "TlkDoc", "open_tlk", "import_txt", "save_to_memory",
            "fill_tlk", "plan_fill", "guess_type", "save_term",
+           "survey_rebuild", "rebuild_and_install_tlk",
            "status_of_text", "violation_summary",
            "ModDoc", "open_mod_doc", "nl_of", "raw_key",
            "make_repack_args", "repack", "OfflineTranslator",

@@ -228,9 +228,18 @@ class Translator(object):
         return probs
 
     def best(self, key, text, log=None):
-        """分级兜底，返回 (译文 or None, 档位标签, 问题列表)。"""
+        """分级兜底，返回 (译文 or None, 档位标签, 问题列表)。
+
+        ★ 2026-10-11：**"术语未统一"不再导致回退原文** ✗ —— 术语表里可能有脏数据或
+          写法差异（`Wilder = 狂念者任意`、`Nentyar Hunter` 对"南提亚 猎人"），
+          为它把整条译文丢掉、让用户看到半英文章节，代价远大于收益。
+          所以循环里顺手留下"**只有术语问题、没有结构问题**"的候选，最后兜底接受它 ✓
+          （零额外 API 调用；术语统一交给 0 花费的事后回治：rename / 违规检查）。
+          **结构性问题**（`R.validate`：占位符、`<...>` 标记、换行、数字丢失）照旧必须拒绝 ✓。
+        """
         stages = (("标记提示", self._hint_tokens), ("遮蔽", self._masked), ("单条", self._single))
         last_probs = []
+        term_only = None          # (候选译文, 档位) —— 只有术语问题、结构没问题
         for tag, fn in stages:
             for _ in range(SINGLE_RETRY):
                 try:
@@ -242,14 +251,24 @@ class Translator(object):
                 if not probs:
                     return cand, tag, []
                 last_probs = probs
+                if term_only is None and not R.validate(text, cand):
+                    term_only = (cand, tag)
                 if log:
                     log("   [%s] 未过校验：%s" % (tag, probs))
         try:
             cand = R.normalize_punct(self._by_lines(text), self.punct)
             if not self._problems(text, cand):
                 return cand, "逐行", []
+            if term_only is None and not R.validate(text, cand):
+                term_only = (cand, "逐行")
         except RuntimeError as e:
             self._warn(key, "逐行失败", str(e), text)
+        if term_only is not None:
+            cand, tag = term_only
+            if log:
+                log("   [%s] 仅术语未统一 → 接受译文（不回退原文）" % tag)
+            self._warn(key, "术语待统一", "; ".join(last_probs)[:300], text)
+            return cand, tag + "·术语待统一", last_probs
         return None, "", last_probs
 
     def _warn(self, key, kind, detail, src=""):

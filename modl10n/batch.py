@@ -62,7 +62,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog="modl10n.batch", description="批量汉化多个 NWN:EE .mod")
     ap.add_argument("--mods", nargs="+", required=True, help=".mod 路径，支持通配符")
     ap.add_argument("--tm", default=P.DEF_TM)
-    ap.add_argument("--glossary", default=P.DEF_GLOSSARY)
+    ap.add_argument("--glossary", default=P.DEF_TM,
+                    help="术语表来源：*.sqlite -> term 表（默认，最新真源）；*.json -> 冻结快照")
     ap.add_argument("--outdir", default=None)
     ap.add_argument("--workers", type=int, default=5)
     ap.add_argument("--limit", type=int, default=0, help="每个 mod 只翻 N 条（冒烟）")
@@ -88,7 +89,7 @@ def main(argv=None):
     os.makedirs(args.outdir, exist_ok=True)
 
     tm = TM(args.tm)
-    gl = Glossary.load(args.glossary)
+    gl, grep = P.load_glossary(args.glossary, tm_path=args.tm)
     from .translator import Translator, read_api_key
     key = read_api_key(args.api_key)
     tr = None
@@ -99,7 +100,7 @@ def main(argv=None):
     for m in mods:
         print("   - %s" % os.path.basename(m))
     print("翻译记忆：%s（%d 条 %s）" % (args.tm, tm.count(), tm.stats()))
-    print("术语表：%s（%d 条）" % (args.glossary, len(gl)))
+    print(P.describe_glossary(gl, grep))
     if not args.yes and not (args.extract_only or args.dry_run) and args.limit == 0:
         try:
             input("\n按回车开始（Ctrl+C 取消）...")

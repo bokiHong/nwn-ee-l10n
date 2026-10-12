@@ -657,6 +657,133 @@ def check_sprint7():
     return rc1 or rc2
 
 
+def check_sprint8_terms_source():
+    """Sprint 8（2026-10-11）：**术语源加固** —— 翻译注入必须用最新真源，不是冻结快照。
+
+    背景（修掉的静默失效）：`modl10n.pipeline` 一直只读 `glossary.json`
+    （2026-10-08 快照，215 条），而术语真源在 Sprint 4 就搬到了 `term` 表
+    （6,585 条 active / 1,750 必守）—— **不报错、只是悄悄少注入** ✗。
+    实测 Ch3 待译 6,640 条文本：旧快照命中 26 个术语，新真源命中 148 个。
+
+    本段**只读**（`term` 表只 SELECT、`tm` 表只 SELECT）。
+    """
+    import re as _re
+    import time
+
+    print("\n[29] Sprint 8：术语源加固（`term` 表 / 硬软分档 / 无损提速）")
+    from modl10n.glossary import Glossary, STOP_EN, in_compound
+    from modl10n import pipeline as P
+    from .services import term_service as TS
+
+    # ① 降噪常量**单一真源**（两边各一份会漂移 → 注入的术语被判自己违规 ✗）
+    _check("STOP_EN 单一真源（term_service 与 modl10n.glossary 同一对象）",
+           TS.STOP_EN is STOP_EN)
+    _check("in_compound 单一真源", TS._in_compound is in_compound)
+
+    # ② 两种来源都能加载，且**自动判别**正确
+    gj, rj = Glossary.load_auto(GLOSSARY_JSON)
+    _check("glossary.json -> 判为「冻结快照」",
+           rj.get("source_kind") == "json-snapshot" and len(gj) >= 213,
+           "%d 条" % len(gj))
+    g, rp = Glossary.load_auto(DEF_DB)
+    _check_data("tm.sqlite -> 判为「term 表」",
+           rp.get("source_kind") == "term-db" and rp.get("rows", 0) > 6000,
+           "active %d 条 -> 注入 %d 条（硬 %d / 软 %d）"
+           % (rp.get("rows", 0), len(g), g.hard, g.soft))
+    _check_data("硬档 > 1000 且软档 > 4000（分档生效）", g.hard > 1000 and g.soft > 4000)
+
+    # ③ 降噪与歧义
+    _check_data("硬档里没有 STOP_EN 普通词（`Trade`/`Air`/`Failure` 这类 ✗）",
+           not [t for t in g.terms if t["required"] and t["en"].lower() in STOP_EN])
+    _check_data("同英多译不进硬档（有歧义就不喂给模型）",
+           not [t for t in g.terms if t["required"] and t["en"] in g.conflicts],
+           "%d 个被跳过" % len(g.conflicts))
+
+    # ④ 分档措辞 —— `translator` 只靠 `required` 区分"必须使用/建议"，所以这里必须对 ✓
+    probe = "Zarala met a Drow of Calimshan on the Trade road."
+    blk = g.prompt_block(probe)
+    _check_data("prompt_block：硬档进「必须使用」、软档进「建议」",
+           "【固定译名·必须使用】" in blk and "【建议译名】" in blk
+           and "Zarala = 扎拉拉" in blk,
+           "命中 %d 条术语" % len(g.hits(probe)))
+
+    # ⑤ 无损粗筛：与「逐条正则全量扫描」的结果**必须逐条完全一致**（抽样 400 条真实源文）
+    db2 = connect(DEF_DB, migrate_now=False)
+    try:
+        texts = [r[0] for r in db2.execute(
+            "SELECT src_text FROM unit WHERE src_text IS NOT NULL AND src_text<>'' "
+            "ORDER BY uid LIMIT 400")]
+    finally:
+        db2.close()
+    rxs = [(_re.compile(r"(?<![A-Za-z])" + _re.escape(t["en"]) + r"(?![A-Za-z])"),
+            t["en"], t["zh"]) for t in g.terms]
+    bad = 0
+    for s in texts:
+        slow = [(en, zh) for rx, en, zh in rxs if rx.search(s)]
+        if g.hits(s) != slow:
+            bad += 1
+    _check("无损粗筛结果 == 全量正则（%d 条样本）" % len(texts), bad == 0,
+           "不一致 %d 条" % bad)
+
+    # ⑥ 性能护栏：不许回退到"每条术语现编译正则"（那会让翻译中途卡死 ✗）
+    sample = texts[:200] or [""]
+    t0 = time.time()
+    for s in sample:
+        g.hits(s)
+    ms = (time.time() - t0) / len(sample) * 1000
+    _check("单条 hits < 50ms（%d 条术语）" % len(g), ms < 50, "实测 %.1fms/条" % ms)
+
+    # ⑦ 过期警告必须打出来（不再静默）
+    gl2, rep2 = P.load_glossary(GLOSSARY_JSON)
+    txt = P.describe_glossary(gl2, rep2)
+    _check_data("显式用快照时打印过期警告 + 最新条数",
+           "冻结快照" in txt and "最新真源" in txt
+           and str(rep2.get("latest_terms")) == str(rp.get("rows")),
+           "不变量：快照 %d 条 vs 真源 %s 条" % (len(gl2), rep2.get("latest_terms")))
+    gl3, rep3 = P.load_glossary(DEF_DB)
+    _check("默认（term 表）不带过期警告", "冻结快照" not in P.describe_glossary(gl3, rep3))
+
+    # ⑧ 宽容校验：`term` 表里的写法差异不该被判违规（否则白重试 ✗）
+    from modl10n.glossary import Glossary as _Gl
+    gtz = _Gl([{"en": "Nentyar Hunter", "zh": "南提亚猎人", "type": "name",
+                "required": True}])
+    strict_bad = gtz.check("Nentyar Hunter", "南提亚 猎人")
+    gtz.tolerant = True
+    tolerant_bad = gtz.check("Nentyar Hunter", "南提亚 猎人")
+    _check("宽容校验：空格差异不算违规", bool(strict_bad) and not tolerant_bad,
+           "严格 %d 条 / 宽容 %d 条" % (len(strict_bad), len(tolerant_bad)))
+    _check_data("`from_term_db` 默认开宽容、`load(json)` 保持严格（旧行为不变）",
+           rp.get("tolerant") is True and gj.tolerant is False)
+
+    # ⑨ ★★ `best()`：**术语未统一不再回退原文**（术语表脏数据不该让整条保持英文 ✗）
+    from modl10n.translator import Translator
+
+    class _Fake(Translator):
+        """只 mock 网络层 —— 返回固定译文，**绝不调 API** ✓。"""
+
+        def __init__(self, reply, gl):
+            Translator.__init__(self, "fake-key", glossary=gl)
+            self.reply = reply
+            self.calls = 0
+
+        def _post(self, messages, json_mode=True, max_tokens=None):
+            self.calls += 1
+            return self.reply
+
+    gt = _Gl([{"en": "Zarala", "zh": "扎拉拉", "type": "name", "required": True}])
+    src = "<CUSTOM0> Zarala the guide"
+    tA = _Fake("<CUSTOM0> 沙拉拉 向导", gt)
+    candA, tagA, _pa = tA.best("k", src)
+    _check("★ 术语未统一 → 接受译文、不回退原文",
+           candA is not None and "术语待统一" in tagA,
+           "tag=%s（%d 次调用）" % (tagA, tA.calls))
+    tB = _Fake("沙拉拉 向导", gt)                 # 丢了 <CUSTOM0>：结构问题
+    candB, _tagB, pB = tB.best("k", src)
+    _check("结构问题（丢标记）→ 仍然拒绝（返回 None）", candB is None,
+           "问题：%s" % (pB[:1],))
+    return 0
+
+
 # ============================================================ 入口
 def main():
     global _results
@@ -669,8 +796,9 @@ def main():
                         "4": "Sprint 4（术语收编，写 term 表）",
                         "5": "Sprint 5（TLK 槽位账本）",
                         "6": "Sprint 6（tlk tool 接中央库）",
-                        "7": "Sprint 7（mod tool + 术语库编辑器）"}.get(
-                            which, "Sprint 1 + 2 + 3 + 4 + 5 + 6 + 7"))
+                        "7": "Sprint 7（mod tool + 术语库编辑器）",
+                        "8": "Sprint 8（术语源加固，只读）"}.get(
+                            which, "Sprint 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8"))
     if not os.path.exists(DEF_DB):
         # 全新环境：先把空库建出来（`tm` / `mods` 两张表的真源在 modl10n），
         # 这样「不依赖数据」的检查照样能跑，而不是抛 `no such table: tm` ✓
@@ -703,6 +831,8 @@ def main():
         check_sprint6()
     if which in ("all", "7"):
         check_sprint7()
+    if which in ("all", "8"):
+        check_sprint8_terms_source()
     n_bad = sum(1 for _n, ok, _d in _results if not ok)
     print("\n" + "=" * 78)
     print("结果：%d 项检查，%d 项通过，%d 项失败"
